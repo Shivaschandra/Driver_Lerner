@@ -36,7 +36,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include "serial.h"
-#include "logger.h"
 
 #define UART_DEBUG 1
 
@@ -54,14 +53,12 @@ uart_t::uart_t(const char *device, int baudrate)
   tty_fd = open(device, (O_RDWR | O_NOCTTY | O_SYNC));
   if (tty_fd < 0)
   {
-    LOGE("Error %d while opening %s", errno, device);
     error = INIT_FAIL;
     return;
   }
 
   if((ret = serial_speed_set(tty_fd, baudrate)) != 0)
   {
-    LOGE("Error %d while setting speed for %s", ret, device);
     error = INIT_FAIL;
     return;
   }
@@ -69,7 +66,6 @@ uart_t::uart_t(const char *device, int baudrate)
   memset(&tty, 0, sizeof(struct termios));
   if(tcgetattr (tty_fd, &tty) != 0)
   {
-    LOGE("Error %d while getting attr of %s", errno, device);
     error = INIT_FAIL;
     return;
   }
@@ -93,7 +89,6 @@ uart_t::uart_t(const char *device, int baudrate)
 
   if(tcsetattr(tty_fd, TCSANOW, &tty) != 0)
   {
-    LOGE("Error %d while setting attr for %s", errno, device);
     error = INIT_FAIL;
     return;
   }
@@ -131,7 +126,9 @@ int uart_t::push_tx(uchar *in_buffer, int len)
 
 int uart_t::read_rx(uchar *out_buffer, int max_len)
 {
+
   int len = read(tty_fd, out_buffer, max_len);
+  
 
 #if UART_DEBUG
   printf("uart --> ");
@@ -203,4 +200,3 @@ int uart_t::flush_io_buffers()
 
   return set_blocking();
 }
-
